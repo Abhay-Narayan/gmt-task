@@ -37,19 +37,13 @@ const Clock = () => {
 
   const [speed, setSpeed] = useState(getSpeedFromURL);
   const startTime = useRef(Date.now());
-  const elapsedMinutes = useRef(0);
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
       const elapsed = (now - startTime.current) / 1000; // elapsed time in seconds
       const adjustedElapsed = elapsed * speed;
 
-      elapsedMinutes.current += adjustedElapsed / 60; // Calculate elapsed minutes
-
-      if (elapsedMinutes.current >= 120) {
-        clearInterval(interval); // Stop the interval when 120 minutes elapsed
-        return;
-      }
+    
       const adjustedDate = new Date(startTime.current - Math.sign(speed) * adjustedElapsed * 1000);
 
       const hours = adjustedDate.getHours();
