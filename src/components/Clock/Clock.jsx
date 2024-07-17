@@ -30,15 +30,26 @@ const Clock = () => {
     return () => clearInterval(intervalId); // Clean up the interval on component unmount
   }, []);
 
-  const [speed, setSpeed] = useState(1);
-  const startTime = useRef(Date.now());
+  const getSpeedFromURL = () => {
+    const params = new URLSearchParams(window.location.search);
+    return parseFloat(params.get('speed')) || 1;
+  };
 
+  const [speed, setSpeed] = useState(getSpeedFromURL);
+  const startTime = useRef(Date.now());
+  const elapsedMinutes = useRef(0);
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
       const elapsed = (now - startTime.current) / 1000; // elapsed time in seconds
       const adjustedElapsed = elapsed * speed;
 
+      elapsedMinutes.current += adjustedElapsed / 60; // Calculate elapsed minutes
+
+      if (elapsedMinutes.current >= 120) {
+        clearInterval(interval); // Stop the interval when 120 minutes elapsed
+        return;
+      }
       const adjustedDate = new Date(startTime.current - Math.sign(speed) * adjustedElapsed * 1000);
 
       const hours = adjustedDate.getHours();
@@ -62,10 +73,14 @@ const Clock = () => {
     };
   }, [speed]);
 
-
+  const generateUrl = () => {
+    const url = `${window.location.origin}${window.location.pathname}?speed=${speed}`;
+    navigator.clipboard.writeText(url); // Optionally copy the URL to clipboard
+    alert(`URL copied to clipboard`);
+  };
 
   return (
-    <div className="mainclock flex items-center justify-around ">
+    <div className="mainclock flex flex-col md:flex-row items-center md:justify-center md:mt-8 md:gap-20 ">
       <div className="clock">
         <div className="clock-wrapper bg-slate-800">
           <div className="center"></div>
@@ -128,7 +143,7 @@ const Clock = () => {
           </>
         </div>
       </div>
-      <div className="rightsec flex flex-col gap-5">
+      <div className=" w-[80%] md:w-[45%] rightsec flex flex-col gap-5">
         <h1 className="font-bold text-xl">Random quote:</h1>
         <p className="bg-slate-800 rounded-md shadow-lg p-2 text-[#FE8C00] font-semibold text-lg italic">{quote}</p>
         <h1 className="font-bold text-xl">
@@ -147,6 +162,8 @@ const Clock = () => {
           step={0.1}
           onChange={(e) => setSpeed(parseFloat(e.target.value))}
         />
+        <button onClick={generateUrl} className="p-2 rounded-md bg-[#FE8C00]">Share</button>
+        <p className="mt-1"><b>Note:</b> Make sure to login first in the device or window wherever you want to open the shared link</p>
         </div>
         
       </div>
